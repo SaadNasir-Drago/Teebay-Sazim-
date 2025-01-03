@@ -5,7 +5,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
     datasources: {
         db: {
-            url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/mydatabase',
+            url: process.env.DATABASE_URL || 'postgresql://postgres:root@localhost:5432/postgres',
         },
     },
 });

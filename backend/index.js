@@ -2,47 +2,83 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { ApolloServer, gql } = require('apollo-server-express');
 const prisma = require('./database.js');
 
 // Initialize the Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Import database connection
+// GraphQL Schema
+typeDefs = gql`
+    type User {
+        id: ID!
+        firstName: String!
+        lastName: String!
+        address: String!
+        phoneNumber: String!
+        email: String!
+        password: String!
+        createdAt: String!
+        updatedAt: String!
+    }
+
+    input UserInput {
+        firstName: String!
+        lastName: String!
+        address: String!
+        phoneNumber: String!
+        email: String!
+        password: String!
+    }
+
+    type Mutation {
+        createUser(data: UserInput!): User!
+    }
+
+    type Query {
+        _: Boolean
+    }
+`;
+
+// GraphQL Resolvers
+const resolvers = {
+    Mutation: {
+        createUser: async (_, { data }) => {
+            try {
+                const newUser = await prisma.user.create({
+                    data,
+                });
+                return newUser;
+            } catch (error) {
+                throw new Error('Failed to create user');
+            }
+        },
+    },
+};
+
 
 // Routes
 // Root route
 app.get('/', (req, res) => {
-    res.send({ message: 'Welcome to the Express Backend Server!' });
+  res.send({ message: 'Welcome to the Express Backend Server!' });
 });
 
-// Example API route
-app.get('/api/data', async (req, res) => {
-    try {
-        const data = await prisma.example.findMany();
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-});
+// Initialize Apollo Server
+(async () => {
+  const server = new ApolloServer({ typeDefs, resolvers });
+  await server.start();
+  server.applyMiddleware({ app });
 
-// Post route example
-app.post('/api/data', async (req, res) => {
-    try {
-        const newItem = await prisma.example.create({
-            data: req.body
-        });
-        res.status(201).json({ message: 'Item created successfully!', item: newItem });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create item' });
-    }
-});
+  // Start the server
+  app.listen(PORT, () => {
+      console.log(`GraphQL server is running at http://localhost:${PORT}${server.graphqlPath}`);
+  });
+})();
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+
+
