@@ -53,9 +53,9 @@ const resolvers = {
                 const newUser = await prisma.user.create({
                     data,
                 });
-                return newUser;
+                return newUser; // Returning the created user
             } catch (error) {
-                throw new Error('Failed to create user');
+                throw new Error('Failed to create user'); // Proper error handling
             }
         },
     },

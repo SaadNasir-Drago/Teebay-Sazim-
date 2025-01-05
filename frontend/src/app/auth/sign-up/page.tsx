@@ -15,6 +15,24 @@ import {
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from "react"
+import { gql, useMutation } from "@apollo/client";
+import { useRouter } from "next/navigation"
+
+// Define the GraphQL mutation
+const CREATE_USER_MUTATION = gql`
+  mutation CreateUser($data: UserInput!) {
+    createUser(data: $data) {
+      id
+      firstName
+      lastName
+      email
+      phoneNumber
+      address
+      createdAt
+      updatedAt
+    }
+  }
+`;
 
 const signUpSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
@@ -32,9 +50,11 @@ const signUpSchema = z.object({
 type SignUpValues = z.infer<typeof signUpSchema>
 
 export default function SignUpPage() {
+  const [createUser] = useMutation(CREATE_USER_MUTATION);
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
+  const router = useRouter();
+  
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -49,9 +69,35 @@ export default function SignUpPage() {
   })
 
   async function onSubmit(data: SignUpValues) {
-    // TODO: Implement GraphQL mutation for sign up
-    console.log(data)
-  }
+    try {
+        // Call the GraphQL mutation
+        const { data: response } = await createUser({
+            variables: {
+                data: {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    address: data.address,
+                    phoneNumber: data.phoneNumber,
+                    email: data.email,
+                    password: data.password,
+                },
+            },
+        });
+
+        if (response && response.createUser) {
+            
+            console.log("User created successfully:", response.createUser);
+            alert(`Registration successful! Welcome, ${response.createUser.firstName}!`);
+            router.push('/sign-in')
+        } else {
+            alert("Unexpected response from the server.");
+        }
+    } catch (error) {
+        console.error("Error creating user:", error);
+        alert("Failed to register user. Please try again.");
+    }
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center py-8">
