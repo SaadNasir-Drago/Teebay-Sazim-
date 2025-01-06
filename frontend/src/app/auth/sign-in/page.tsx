@@ -13,6 +13,17 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { gql, useMutation } from "@apollo/client";
+import { useRouter } from "next/navigation"
+
+const LOGIN_USER_MUTATION = gql`
+  mutation LoginUser($email: String!, $password: String!) {
+    loginUser(email: $email, password: $password) {
+      success
+      message
+    }
+  }
+`;
 
 const signInSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -22,6 +33,9 @@ const signInSchema = z.object({
 type SignInValues = z.infer<typeof signInSchema>
 
 export default function SignInPage() {
+  const [loginUser] = useMutation(LOGIN_USER_MUTATION);
+  const router = useRouter();
+
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -31,8 +45,26 @@ export default function SignInPage() {
   })
 
   async function onSubmit(data: SignInValues) {
-    // TODO: Implement GraphQL mutation for sign in
-    console.log(data)
+    try {
+      console.log(data)
+      const { data: response } = await loginUser({
+        variables: {
+          email: data.email,
+          password: data.password,
+        },
+      });
+
+      if (response && response.loginUser.success) {
+        alert(response.loginUser.message); // Show success message
+        localStorage.setItem('userEmail', data.email);
+        router.push('/products')
+      } else {
+        alert(response.loginUser.message); // Show error message
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      alert("An error occurred. Please try again.");
+    }
   }
 
   return (

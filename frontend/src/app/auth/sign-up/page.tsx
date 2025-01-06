@@ -54,7 +54,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter();
-  
+
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -88,7 +88,7 @@ export default function SignUpPage() {
             
             console.log("User created successfully:", response.createUser);
             alert(`Registration successful! Welcome, ${response.createUser.firstName}!`);
-            router.push('/sign-in')
+            router.push('/auth/sign-in')
         } else {
             alert("Unexpected response from the server.");
         }

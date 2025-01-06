@@ -8,13 +8,34 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   firstName   String
   lastName    String
   address     String
-  phoneNumber String   @unique
-  email       String   @unique
+  phoneNumber String    @unique
+  email       String    @unique
   password    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Back-reference to the Product model
+  products    Product[] // One-to-many relationship
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  rentPrice   Float
+  rentType    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  views       Int      @default(0)
+
+  // Relationship
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId]) // Index for efficient queries by userId
 }
