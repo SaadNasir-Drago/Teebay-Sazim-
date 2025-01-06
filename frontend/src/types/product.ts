@@ -9,7 +9,7 @@ export type Category =
 export interface Product {
   id: string
   title: string
-  categories: Category[]
+  categories: String[]
   description: string
   price: number
   rentPrice: number
@@ -20,7 +20,7 @@ export interface Product {
 
 export interface ProductFormData {
   title: string
-  categories: Category[]
+  categories: String[]
   description: string
   price: number
   rentPrice: number

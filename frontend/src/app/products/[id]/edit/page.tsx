@@ -55,7 +55,7 @@ export default function EditProductPage() {
       description: 'Latest iphone 13 max. Bought from the Apple store. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae.',
       price: 1500,
       rentPrice: 50,
-      rentType: 'hourly'
+      rentType: 'per hour'
     }
   })
 
@@ -93,8 +93,8 @@ export default function EditProductPage() {
                   <FormLabel>Categories</FormLabel>
                   <FormControl>
                     <Select
-                      multiple
-                      value={field.value}
+                      // multiple
+                      // value={field.value}
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger className="h-12">

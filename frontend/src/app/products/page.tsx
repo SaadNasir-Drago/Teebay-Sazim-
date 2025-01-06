@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { Trash2 } from 'lucide-react'
-import Link from 'next/link'
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { gql, useQuery } from "@apollo/client";
+} from "@/components/ui/dialog";
+import { gql, useQuery, useMutation } from "@apollo/client";
+import { useRouter } from "next/navigation";
 
 const GET_USER_PRODUCTS = gql`
   query GetUserProducts($email: String!) {
@@ -32,12 +33,28 @@ const GET_USER_PRODUCTS = gql`
   }
 `;
 
+const DELETE_PRODUCT = gql`
+  mutation DeleteProduct($id: Int!) {
+    deleteProduct(id: $id)
+  }
+`;
 
 export default function ProductsPage() {
   const userEmail = "jscouler0@newsvine.com"; // Replace with dynamic user email if needed
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  
-  const { data, loading, error } = useQuery(GET_USER_PRODUCTS, {
+  const router = useRouter();
+
+  const [deleteProduct] = useMutation(DELETE_PRODUCT, {
+    onCompleted: () => {
+      console.log("Product deleted successfully");
+      refetch(); // Refetch products after deletion
+    },
+    onError: (error) => {
+      console.error("Error deleting product:", error.message);
+    },
+  });
+
+  const { data, loading, error, refetch } = useQuery(GET_USER_PRODUCTS, {
     variables: { email: userEmail },
     onCompleted: (data) => {
       console.log("Fetched products:", data); // Log fetched data
@@ -46,7 +63,6 @@ export default function ProductsPage() {
       console.error("Error fetching products:", error.message); // Log error
     },
   });
-  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -59,20 +75,40 @@ export default function ProductsPage() {
 
   const products = data?.getUserProducts || [];
 
-  const handleDelete = () => {
-    // TODO: Implement delete mutation
-    setDeleteId(null);
+  
+  const handleDelete = async () => {
+    try {
+      if (deleteId !== null) {
+        await deleteProduct({ variables: { id: parseInt(deleteId, 10) } });
+
+      }
+      setDeleteId(null); // Close the dialog
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error("Error during product deletion:", err.message);
+      } else {
+        console.error("Error during product deletion:", err);
+      }
+    }
   };
+
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem("userEmail");
+      router.push('/auth/sign-in')// Redirect to login page after logout
+    } catch (error) {
+      
+    }
+  }
 
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold text-center flex-1">MY PRODUCTS</h1>
-          <Button 
-            variant="destructive" 
-            className="bg-red-500 hover:bg-red-600"
-          >
+          <h1 className="text-2xl font-semibold text-center flex-1">
+            MY PRODUCTS
+          </h1>
+          <Button variant="destructive" className="bg-red-500 hover:bg-red-600" onClick={handleLogout}>
             LOGOUT
           </Button>
         </div>
@@ -84,35 +120,46 @@ export default function ProductsPage() {
                 <div>
                   <h2 className="text-xl font-medium">{product.name}</h2>
                   <p className="text-gray-600 mt-1">
-                    Price: ${product.price} | Rent: ${product.rentPrice} {product.rentType}
+                    Price: ${product.price} | Rent: ${product.rentPrice}{" "}
+                    {product.rentType}
                   </p>
                   <p className="mt-4">{product.description}</p>
                   {product.description.length > 100 && (
-                    <button className="text-[#6C63FF] mt-2">More Details</button>
+                    <button className="text-[#6C63FF] mt-2">
+                      More Details
+                    </button>
                   )}
                   {/* Display categories */}
                   {product.categories && product.categories.length > 0 && (
                     <div className="mt-4">
-                      <h3 className="text-sm font-medium text-gray-700">Categories:</h3>
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Categories:
+                      </h3>
                       <ul className="list-disc list-inside">
-                        {product.categories.map((category: string, index: number) => (
-                          <li key={index} className="text-gray-600 text-sm">
-                            {category}
-                          </li>
-                        ))}
+                        {product.categories.map(
+                          (category: string, index: number) => (
+                            <li key={index} className="text-gray-600 text-sm">
+                              {category}
+                            </li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
                 </div>
-                <button 
-                  onClick={() => setDeleteId(product.id)}
+                <button
+                  onClick={() => setDeleteId(product.id.toString())}
+
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <Trash2 className="h-5 w-5" />
                 </button>
               </div>
               <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
-                <p>Date posted: {new Date(product.createdAt).toLocaleDateString()}</p>
+                <p>
+                  Date posted:{" "}
+                  {new Date(product.createdAt).toLocaleDateString()}
+                </p>
                 <p>{product.views} views</p>
               </div>
             </div>

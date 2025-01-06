@@ -82,6 +82,7 @@ typeDefs = gql`
     createUser(data: UserInput!): User!
     loginUser(email: String!, password: String!): LoginResponse!
     createProduct(data: ProductInput!): CreateProductResponse!
+    deleteProduct(id: Int!): Boolean!
   }
 `;
 
@@ -199,7 +200,33 @@ const resolvers = {
           console.error("Error creating product:", error);
           throw new Error(`Failed to create product: ${error.message}`);
         }
-      }      
+      },
+      deleteProduct: async (_, { id }) => {
+        try {
+          console.log("Deleting product with ID:", id);
+      
+          // Check if the product exists
+          const product = await prisma.product.findUnique({
+            where: { id },
+          });
+      
+          if (!product) {
+            throw new Error("Product not found");
+          }
+      
+          // Delete the product
+          await prisma.product.delete({
+            where: { id },
+          });
+      
+          console.log("Product deleted successfully:", id);
+          return true;
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          throw new Error("Failed to delete product");
+        }
+      },
+       
   },
 };
 
