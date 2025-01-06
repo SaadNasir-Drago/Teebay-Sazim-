@@ -32,6 +32,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   views       Int      @default(0)
+  categories  String[] // Use Prisma's JSON array for categories
 
   // Relationship
   userId      Int

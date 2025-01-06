@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 // GraphQL Schema
 typeDefs = gql`
   type User {
-    id: ID!
+    id: Int!
     firstName: String!
     lastName: String!
     address: String!
@@ -28,25 +28,30 @@ typeDefs = gql`
   }
 
   type Product {
-    id: ID!
-    name: String!
-    description: String!
-    price: Float!
-    rentPrice: Float!
-    rentType: String!
-    userId: ID!
-    createdAt: String!
-    updatedAt: String!
-  }
+  id: Int!
+  name: String!
+  description: String!
+  price: Float!
+  rentPrice: Float!
+  rentType: String!
+  userId: Int!
+  createdAt: String!
+  updatedAt: String!
+  views: Int!
+  categories: [String!]! 
+}
+
 
   input ProductInput {
-    name: String!
-    description: String!
-    price: Float!
-    rentPrice: Float!
-    rentType: String!
-    userId: Int!
-  }
+  name: String!
+  description: String!
+  price: Float!
+  rentPrice: Float!
+  rentType: String!
+  email: String! # Use email instead of userId
+  categories: [String!]! # Include categories array
+}
+
 
   input UserInput {
     firstName: String!
@@ -84,25 +89,41 @@ typeDefs = gql`
 const resolvers = {
   Query: {
     getUserProducts: async (_, { email }) => {
-      try {
-        const user = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        if (!user) {
-          throw new Error("User not found");
+        try {
+          console.log("Fetching products for email:", email);
+      
+          const user = await prisma.user.findUnique({
+            where: { email },
+          });
+      
+          if (!user) {
+            console.error("User not found with email:", email);
+            throw new Error("User not found");
+          }
+      
+          console.log("Found user:", user);
+      
+          // Get all fields from Product table for this userId
+          const products = await prisma.product.findMany({
+            where: { 
+              userId: user.id 
+            },
+            // No select clause so we get all fields
+          });
+      
+          console.log("Fetched products:", products);
+      
+          return products.map(product => ({
+            ...product,
+            createdAt: product.createdAt.toISOString(),
+            updatedAt: product.updatedAt.toISOString()
+          }));
+        } catch (error) {
+          console.error("Error fetching products:", error);
+          throw new Error("Failed to fetch products");
         }
-
-        const products = await prisma.product.findMany({
-          where: { userId: user.id },
-        });
-
-        return products;
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        throw new Error("Failed to fetch products");
-      }
-    },
+    }
+       
   },
   Mutation: {
     createUser: async (_, { data }) => {
@@ -143,38 +164,45 @@ const resolvers = {
     },
     createProduct: async (_, { data }) => {
         try {
-            // Log the incoming data
-            console.log("Incoming data for createProduct mutation:", data);
-    
-            // Create the product
-            const newProduct = await prisma.product.create({
-                data,
-            });
-    
-            // Log the created product
-            console.log("Product created successfully:", newProduct);
-    
-            return {
-                success: true,
-                message: `Product created successfully: ${newProduct.name}!`,
-                product: newProduct,
-            };
+          console.log("Incoming data for createProduct mutation:", data);
+      
+          // Fetch the user using email
+          const user = await prisma.user.findUnique({
+            where: { email: data.email },
+          });
+      
+          if (!user) {
+            throw new Error("User not found with the provided email.");
+          }
+      
+          // Save the product with userId and categories
+          const newProduct = await prisma.product.create({
+            data: {
+              name: data.name,
+              description: data.description,
+              price: data.price,
+              rentPrice: data.rentPrice,
+              rentType: data.rentType,
+              userId: user.id, // Use userId retrieved from email
+              categories: {
+                set: data.categories, // Save categories array (adjust schema if necessary)
+              },
+            },
+          });
+      
+          return {
+            success: true,
+            message: `Product created successfully: ${newProduct.name}!`,
+            product: newProduct,
+          };
         } catch (error) {
-            // Log the error with additional details
-            console.error("Error creating product:", {
-                message: error.message,
-                stack: error.stack,
-                inputData: data,
-            });
-    
-            throw new Error(`Failed to create product: ${error.message}`);
+          console.error("Error creating product:", error);
+          throw new Error(`Failed to create product: ${error.message}`);
         }
-    },
-    
+      }      
   },
 };
 
-// Routes
 // Root route
 app.get("/", (req, res) => {
   res.send({ message: "Welcome to the Express Backend Server!" });

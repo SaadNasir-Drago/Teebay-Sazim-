@@ -12,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Product } from '@/types/product'
 import { gql, useQuery } from "@apollo/client";
 
 const GET_USER_PRODUCTS = gql`
@@ -24,44 +23,30 @@ const GET_USER_PRODUCTS = gql`
       price
       rentPrice
       rentType
+      userId
       createdAt
+      updatedAt
       views
+      categories
     }
   }
 `;
 
-// Mock data - replace with actual data from API
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    title: 'Cricket kit',
-    categories: ['SPORTING GOODS', 'OUTDOOR'],
-    description: '2014 cricket kit brand new in box. Never used. Bought from the shop. Professional kit. Pick up item please.',
-    price: 500,
-    rentPrice: 100,
-    rentType: 'daily',
-    datePosted: '21st August 2020',
-    views: 156
-  },
-  {
-    id: '2',
-    title: 'iPhone 13 pro max',
-    categories: ['ELECTRONICS'],
-    description: 'Latest iphone 13 max. Bought from the Apple store. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ...',
-    price: 1500,
-    rentPrice: 50,
-    rentType: 'hourly',
-    datePosted: '21st Sept 2021',
-    views: 1028374417
-  }
-]
+
 export default function ProductsPage() {
   const userEmail = "jscouler0@newsvine.com"; // Replace with dynamic user email if needed
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
+  
   const { data, loading, error } = useQuery(GET_USER_PRODUCTS, {
     variables: { email: userEmail },
+    onCompleted: (data) => {
+      console.log("Fetched products:", data); // Log fetched data
+    },
+    onError: (error) => {
+      console.error("Error fetching products:", error.message); // Log error
+    },
   });
+  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -104,6 +89,19 @@ export default function ProductsPage() {
                   <p className="mt-4">{product.description}</p>
                   {product.description.length > 100 && (
                     <button className="text-[#6C63FF] mt-2">More Details</button>
+                  )}
+                  {/* Display categories */}
+                  {product.categories && product.categories.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium text-gray-700">Categories:</h3>
+                      <ul className="list-disc list-inside">
+                        {product.categories.map((category: string, index: number) => (
+                          <li key={index} className="text-gray-600 text-sm">
+                            {category}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
                 <button 
