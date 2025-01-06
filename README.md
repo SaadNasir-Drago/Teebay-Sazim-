@@ -23,8 +23,8 @@ Follow the steps below to set up and run the Teebay application locally.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/teebay.git
-cd teebay
+git clone https://github.com/SaadNasir-Drago/Teebay-Sazim-.git
+cd Teebay-Sazim-
 ```
 
 ---
