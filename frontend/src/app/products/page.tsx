@@ -40,7 +40,7 @@ const DELETE_PRODUCT = gql`
 `;
 
 export default function ProductsPage() {
-  const userEmail = "jscouler0@newsvine.com"; // Replace with dynamic user email if needed
+  const userEmail = localStorage.getItem("userEmail") || ""; // Retrieve user email from local storage
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const router = useRouter();
 

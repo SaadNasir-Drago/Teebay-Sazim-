@@ -93,45 +93,45 @@ export default function NewProductPage() {
   });
 
   const onSubmit = async (data: ProductFormData) => {
-    try {
-      const userEmail = localStorage.getItem("userEmail"); // Retrieve email from localStorage
-  
-      if (!userEmail) {
-        throw new Error("User email not found in localStorage.");
-      }
-  
-      const productData = {
-        name: data.title,
-        description: data.description,
-        price: data.price,
-        rentPrice: data.rentPrice,
-        rentType: data.rentType,
-        email: userEmail, // Send email instead of userId
-        categories: data.categories, // Include categories array
-      };
-  
-      console.log("Sending data to backend:", productData);
-  
-      const response = await createProduct({
-        variables: { data: productData },
-      });
-  
-      const { success, message, product } = response.data.createProduct;
-  
-      if (success) {
-        console.log("Product created:", product);
-        alert(message); // Display the success message
-        form.reset(); // Reset the form
-        setStep(1); // Navigate to the first step
-      } else {
-        alert("Failed to create product. Please try again.");
-      }
-    } catch (err) {
-      console.error("Error creating product:", err);
-      alert("An error occurred. Please try again.");
+  try {
+    const userEmail = localStorage.getItem("userEmail"); // Retrieve email from localStorage
+
+    if (!userEmail) {
+      throw new Error("User email not found in localStorage.");
     }
-  };
-  
+
+    const productData = {
+      name: data.title,
+      description: data.description,
+      price: data.price,
+      rentPrice: data.rentPrice,
+      rentType: data.rentType,
+      email: userEmail, // Send email instead of userId
+      categories: data.categories, // Include categories array
+    };
+
+    console.log("Sending data to backend:", productData);
+
+    const response = await createProduct({
+      variables: { data: productData },
+    });
+
+    const { success, message, product } = response.data.createProduct;
+
+    if (success) {
+      console.log("Product created:", product);
+      alert(message); // Display the success message
+      form.reset(); // Reset the form
+      setStep(1); // Navigate to the first step
+    } else {
+      alert("Failed to create product. Please try again.");
+    }
+  } catch (err) {
+    console.error("Error creating product:", err);
+    alert("An error occurred. Please try again.");
+  }
+};
+
 
   // Handler for category selection
   const handleCategoryChange = (category: string) => {
